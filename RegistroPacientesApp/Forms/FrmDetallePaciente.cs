@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualBasic;
+﻿
+using Microsoft.VisualBasic;
 using RegistroPacientesApp.Data;
 using System;
 using System.Collections.Generic;
@@ -24,12 +25,9 @@ namespace RegistroPacientesApp.Forms
         private int _pacienteId;
 
 
-       
+
         // ✅ Soporta múltiples prótesis
-        private List<(string Tipo, int Inicio, int Fin)> protesisLista = new List<(string, int, int)>();
-
-
-
+        private List<(string Tipo, int Inicio, int Fin, string Estado)> protesisLista = new List<(string, int, int, string)>();
 
         private class PiezaTag
         {
@@ -151,8 +149,7 @@ namespace RegistroPacientesApp.Forms
                 Top = datosPanel.Bottom + 20,
                 AutoSize = true,
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 60, 120),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left
+                ForeColor = Color.FromArgb(30, 60, 120)
             };
             Controls.Add(lblOdonto);
 
@@ -165,17 +162,11 @@ namespace RegistroPacientesApp.Forms
                 Height = 460,
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
-                AutoScroll = true,
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+                AutoScroll = true
             };
             Controls.Add(pnlOdontograma);
 
-  
-
-
-            
-
-            // === BOTÓN DE PRÓTESIS ===
+            // === BOTONES ===
             Button btnProtesis = new Button()
             {
                 Text = "🦷 Prótesis Total / Removible",
@@ -192,7 +183,21 @@ namespace RegistroPacientesApp.Forms
             btnProtesis.Click += BtnProtesis_Click;
             Controls.Add(btnProtesis);
 
-            // === BOTÓN GUARDAR ===
+            Button btnRecargar = new Button()
+            {
+                Text = "🔄 Recargar Odontograma",
+                Left = 600,
+                Top = pnlOdontograma.Bottom + 20,
+                Width = 220,
+                Height = 40,
+                BackColor = Color.FromArgb(100, 150, 220),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            btnRecargar.Click += (s, e) => CargarOdontograma(_pacienteId);
+            Controls.Add(btnRecargar);
+
             Button btnGuardar = new Button()
             {
                 Text = "💾 Guardar Odontograma",
@@ -208,22 +213,6 @@ namespace RegistroPacientesApp.Forms
             btnGuardar.Click += (s, e) => GuardarOdontograma(_pacienteId);
             Controls.Add(btnGuardar);
 
-            // === BOTÓN RECARGAR ===
-            Button btnRecargar = new Button()
-            {
-                Text = "🔄 Recargar Odontograma",
-                Left = 600,
-                Top = pnlOdontograma.Bottom + 20,
-                Width = 220,
-                Height = 40,
-                BackColor = Color.FromArgb(100, 150, 220),  
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            btnRecargar.Click += (s, e) => CargarOdontograma(_pacienteId);
-            Controls.Add(btnRecargar);
-
             // === SECCIÓN DE PROCEDIMIENTOS ===
             int offsetY = pnlOdontograma.Bottom + 160;
             Label lblProc = new Label()
@@ -235,11 +224,129 @@ namespace RegistroPacientesApp.Forms
             };
             Controls.Add(lblProc);
 
+            // === CAMPOS PARA NUEVO PROCEDIMIENTO (con cálculo automático) ===
+            Label lblNuevo = new Label()
+            {
+                Text = "Registrar nuevo procedimiento:",
+                Left = 40,
+                Top = lblProc.Bottom + 10,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
+            };
+            Controls.Add(lblNuevo);
+
+            Font labelFont = new Font("Segoe UI", 9f);
+
+            Label lblFecha = new Label() { Text = "Fecha:", Left = 40, Top = lblNuevo.Bottom + 12, AutoSize = true, Font = labelFont };
+            DateTimePicker dtpFecha = new DateTimePicker()
+            {
+                Left = 90,
+                Top = lblNuevo.Bottom + 8,
+                Width = 115,
+                Format = DateTimePickerFormat.Short,
+                Name = "dtpFecha"
+            };
+            Controls.Add(lblFecha);
+            Controls.Add(dtpFecha);
+
+            Label lblActividad = new Label() { Text = "Actividad:", Left = 220, Top = lblNuevo.Bottom + 12, AutoSize = true, Font = labelFont };
+            TextBox txtActividad = new TextBox()
+            {
+                Left = 290,
+                Top = lblNuevo.Bottom + 8,
+                Width = 250,
+                Name = "txtActividad"
+            };
+            Controls.Add(lblActividad);
+            Controls.Add(txtActividad);
+
+            Label lblValor = new Label() { Text = "Valor ($):", Left = 560, Top = lblNuevo.Bottom + 12, AutoSize = true, Font = labelFont };
+            TextBox txtValor = new TextBox()
+            {
+                Left = 620,
+                Top = lblNuevo.Bottom + 8,
+                Width = 60,
+                Name = "txtValor"
+            };
+            Controls.Add(lblValor);
+            Controls.Add(txtValor);
+
+            Label lblPago = new Label() { Text = "Pago ($):", Left = 690, Top = lblNuevo.Bottom + 12, AutoSize = true, Font = labelFont };
+            TextBox txtPago = new TextBox()
+            {
+                Left = 750,
+                Top = lblNuevo.Bottom + 8,
+                Width = 60,
+                Name = "txtPago"
+            };
+            Controls.Add(lblPago);
+            Controls.Add(txtPago);
+
+            Label lblSaldo = new Label() { Text = "Saldo ($):", Left = 820, Top = lblNuevo.Bottom + 12, AutoSize = true, Font = labelFont };
+            TextBox txtSaldo = new TextBox()
+            {
+                Left = 890,
+                Top = lblNuevo.Bottom + 8,
+                Width = 60,
+                Name = "txtSaldo",
+                ReadOnly = true,
+                BackColor = Color.WhiteSmoke,
+                TabStop = false
+            };
+
+            Controls.Add(lblSaldo);
+            Controls.Add(txtSaldo);
+
+            void CalcularSaldo()
+            {
+                // Si valor o pago están vacíos, asumimos 0
+                decimal valor = 0, pago = 0;
+                decimal.TryParse(txtValor.Text, out valor);
+                decimal.TryParse(txtPago.Text, out pago);
+
+                // Evitar saldo negativo
+                if (pago > valor)
+                {
+                    txtSaldo.Text = "0.00";
+                    return;
+                }
+
+                decimal saldo = valor - pago;
+                txtSaldo.Text = saldo.ToString("0.00");
+            }
+
+            // 👉 Usa Leave o Validated en lugar de TextChanged
+            txtValor.Leave += (s, e) => CalcularSaldo();
+            txtPago.Leave += (s, e) => CalcularSaldo();
+
+            // Y también, por si el usuario edita dentro de la celda rápidamente:
+            txtValor.TextChanged += (s, e) => CalcularSaldo();
+            txtPago.TextChanged += (s, e) => CalcularSaldo();
+
+
+
+
+            Button btnAgregarProc = new Button()
+            {
+                Text = "➕ Agregar Procedimiento",
+                Left = 1080,
+                Top = lblNuevo.Bottom + 8,
+                Width = 180,
+                Height = 35,
+                BackColor = Color.SeaGreen,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold)
+            };
+            btnAgregarProc.FlatAppearance.BorderSize = 0;
+            btnAgregarProc.Click += (s, e) => AgregarProcedimiento();
+            Controls.Add(btnAgregarProc);
+
+            // === TABLA DE PROCEDIMIENTOS DEBAJO ===
             dgvProcedimientos = new DataGridView()
             {
                 Left = 40,
-                Top = lblProc.Bottom + 10,
-                Width = 1050,
+                Top = btnAgregarProc.Bottom + 20,
+                Width = 1120,
                 Height = 250,
                 ReadOnly = true,
                 AllowUserToAddRows = false,
@@ -250,9 +357,154 @@ namespace RegistroPacientesApp.Forms
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect
             };
             Controls.Add(dgvProcedimientos);
+
+            // 📋 Evento para llenar los campos cuando se selecciona una fila
+            dgvProcedimientos.CellClick += (s, e) =>
+            {
+                if (e.RowIndex >= 0 && dgvProcedimientos.Rows[e.RowIndex].DataBoundItem != null)
+                {
+                    var row = dgvProcedimientos.Rows[e.RowIndex];
+
+                    // ✅ Buscar los controles de registro (renombrados para no chocar)
+                    TextBox campoActividad = Controls.Find("txtActividad", true).FirstOrDefault() as TextBox;
+                    TextBox campoValor = Controls.Find("txtValor", true).FirstOrDefault() as TextBox;
+                    TextBox campoPago = Controls.Find("txtPago", true).FirstOrDefault() as TextBox;
+                    TextBox campoSaldo = Controls.Find("txtSaldo", true).FirstOrDefault() as TextBox;
+                    DateTimePicker campoFecha = Controls.Find("dtpFecha", true).FirstOrDefault() as DateTimePicker;
+
+                    if (campoActividad == null || campoValor == null || campoPago == null || campoSaldo == null || campoFecha == null)
+                        return;
+
+                    // ✅ Cargar valores en los campos de registro
+                    campoFecha.Value = DateTime.TryParse(row.Cells["Fecha"].Value?.ToString(), out DateTime fecha)
+                        ? fecha : DateTime.Today;
+
+                    campoActividad.Text = row.Cells["Actividad"].Value?.ToString() ?? "";
+                    campoValor.Text = row.Cells["Valor"].Value?.ToString() ?? "";
+                    campoPago.Text = row.Cells["Pago"].Value?.ToString() ?? "";
+                    campoSaldo.Text = row.Cells["Saldo"].Value?.ToString() ?? "";
+                }
+
+
+            };
+
+
+            // === BOTONES DE ACCIÓN (con nombres internos) ===
+            var btnEditar = new DataGridViewButtonColumn
+            {
+                Name = "colEditar",
+                HeaderText = "Editar",
+                Text = "✏️",
+                UseColumnTextForButtonValue = true,
+                Width = 60
+            };
+            dgvProcedimientos.Columns.Add(btnEditar);
+
+            var btnEliminar = new DataGridViewButtonColumn
+            {
+                Name = "colEliminar",
+                HeaderText = "Eliminar",
+                Text = "🗑️",
+                UseColumnTextForButtonValue = true,
+                Width = 80
+            };
+            dgvProcedimientos.Columns.Add(btnEliminar);
+
         }
 
+        private void DgvProcedimientos_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            var col = dgvProcedimientos.Columns[e.ColumnIndex];
+            if (col is not DataGridViewButtonColumn) return;
+
+            var row = dgvProcedimientos.Rows[e.RowIndex];
+            var idObj = row.Cells["Id"]?.Value;
+
+            if (idObj == null || idObj == DBNull.Value)
+            {
+                MessageBox.Show("No se pudo obtener el identificador del procedimiento.");
+                return;
+            }
+
+            int numero = Convert.ToInt32(idObj);
+
+            if (col.Name == "colEditar")
+            {
+                // === EDITAR ===
+                string actividad = row.Cells["Actividad"]?.Value?.ToString() ?? "";
+                string valor = row.Cells["Valor"]?.Value?.ToString() ?? "";
+                string pago = row.Cells["Pago"]?.Value?.ToString() ?? "";
+                string saldo = row.Cells["Saldo"]?.Value?.ToString() ?? "";
+                string fecha = row.Cells["Fecha"]?.Value?.ToString() ?? "";
+
+                var txtActividad = Controls.Find("txtActividad", true).FirstOrDefault() as TextBox;
+                var txtValor = Controls.Find("txtValor", true).FirstOrDefault() as TextBox;
+                var txtPago = Controls.Find("txtPago", true).FirstOrDefault() as TextBox;
+                var txtSaldo = Controls.Find("txtSaldo", true).FirstOrDefault() as TextBox;
+                var dtpFecha = Controls.Find("dtpFecha", true).FirstOrDefault() as DateTimePicker;
+
+                if (txtActividad == null || txtValor == null || txtPago == null || txtSaldo == null || dtpFecha == null)
+                    return;
+
+                txtActividad.Text = actividad;
+                txtValor.Text = valor;
+                txtPago.Text = pago;
+                txtSaldo.Text = saldo;
+                if (DateTime.TryParse(fecha, out DateTime parsedFecha))
+                    dtpFecha.Value = parsedFecha;
+
+                dgvProcedimientos.Tag = numero; // Guardar ID real para actualizar
+            }
+            else if (col.Name == "colEliminar")
+            {
+                // === ELIMINAR ===
+                string actividad = row.Cells["Actividad"]?.Value?.ToString() ?? "(sin nombre)";
+                var confirm = MessageBox.Show(
+                    $"¿Seguro que deseas eliminar '{actividad}'?",
+                    "Confirmar eliminación",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (confirm != DialogResult.Yes) return;
+
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using var cmd = new SQLiteCommand("DELETE FROM Procedimiento WHERE Id = @Id", conn);
+                    cmd.Parameters.AddWithValue("@Id", numero);
+
+                    int affected = cmd.ExecuteNonQuery();
+
+                    if (affected > 0)
+                    {
+                        MessageBox.Show("🗑️ Procedimiento eliminado correctamente.",
+                            "Eliminado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("⚠️ No se eliminó ningún registro (verifica la columna clave).",
+                            "Sin cambios", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+
+                CargarProcedimientos(_pacienteId);
+                dgvProcedimientos.ClearSelection();
+                dgvProcedimientos.Tag = null;
+            }
+        }
+
+
+
+
+
+
+
         #endregion
+
+
 
 
         #region === CARGA DE DATOS ===
@@ -279,11 +531,14 @@ namespace RegistroPacientesApp.Forms
 
         private void CargarProcedimientos(int pacienteId)
         {
+            dgvProcedimientos.Columns.Clear(); // 👈 importante
+
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
                 var cmd = new SQLiteCommand(@"
-            SELECT Numero, Dia, Fecha, Actividad, Valor, Saldo, Constancia 
+            SELECT Id, Dia, Fecha, Actividad, Valor, Pago, Saldo
+
             FROM Procedimiento 
             WHERE PacienteId = @PacienteId", conn);
                 cmd.Parameters.AddWithValue("@PacienteId", pacienteId);
@@ -292,7 +547,232 @@ namespace RegistroPacientesApp.Forms
                 da.Fill(dt);
                 dgvProcedimientos.DataSource = dt;
             }
+
+            // 🔹 Ocultar la columna Id (clave primaria)
+            if (dgvProcedimientos.Columns["Id"] != null)
+                dgvProcedimientos.Columns["Id"].Visible = false;
+
+
+
+            // ✅ Añadir columnas de botones DESPUÉS del DataSource
+            var btnEditar = new DataGridViewButtonColumn
+            {
+                Name = "colEditar",
+                HeaderText = "Editar",
+                Text = "✏️",
+                UseColumnTextForButtonValue = true,
+                Width = 60
+            };
+            dgvProcedimientos.Columns.Add(btnEditar);
+
+            var btnEliminar = new DataGridViewButtonColumn
+            {
+                Name = "colEliminar",
+                HeaderText = "Eliminar",
+                Text = "🗑️",
+                UseColumnTextForButtonValue = true,
+                Width = 80
+            };
+            dgvProcedimientos.Columns.Add(btnEliminar);
+
+            dgvProcedimientos.CellContentClick -= DgvProcedimientos_CellContentClick;
+            dgvProcedimientos.CellContentClick += DgvProcedimientos_CellContentClick;
+
         }
+
+
+
+        private void AgregarProcedimiento()
+        {
+            try
+            {
+                // Buscar los controles por nombre
+                DateTimePicker dtpFecha = Controls.Find("dtpFecha", true).FirstOrDefault() as DateTimePicker;
+                TextBox txtActividad = Controls.Find("txtActividad", true).FirstOrDefault() as TextBox;
+                TextBox txtValor = Controls.Find("txtValor", true).FirstOrDefault() as TextBox;
+                TextBox txtPago = Controls.Find("txtPago", true).FirstOrDefault() as TextBox;
+                TextBox txtSaldo = Controls.Find("txtSaldo", true).FirstOrDefault() as TextBox;
+
+                if (dtpFecha == null || txtActividad == null) return;
+
+                if (string.IsNullOrWhiteSpace(txtActividad.Text))
+                {
+                    MessageBox.Show("⚠️ Debe ingresar una actividad.", "Campos obligatorios",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Leer los valores
+                decimal valor = 0, pago = 0, saldo = 0;
+                decimal.TryParse(txtValor.Text, out valor);
+                decimal.TryParse(txtPago.Text, out pago);
+
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+
+                    // Si se seleccionó un registro para editar (por ID guardado en el Tag)
+                    if (dgvProcedimientos.Tag != null)
+                    {
+                        int id = Convert.ToInt32(dgvProcedimientos.Tag);
+
+                        saldo = valor - pago;
+                        if (saldo < 0)
+                        {
+                            MessageBox.Show("❌ El pago no puede ser mayor al valor total.", "Error",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        var updateCmd = new SQLiteCommand(@"
+                    UPDATE Procedimiento
+                    SET Fecha = @Fecha, Dia = @Dia, Actividad = @Actividad,
+                        Valor = @Valor, Pago = @Pago, Saldo = @Saldo
+                    WHERE Id = @Id
+", conn);
+
+                        updateCmd.Parameters.AddWithValue("@Fecha", dtpFecha.Value.ToString("yyyy-MM-dd"));
+                        updateCmd.Parameters.AddWithValue("@Dia", dtpFecha.Value.DayOfWeek.ToString());
+                        updateCmd.Parameters.AddWithValue("@Actividad", txtActividad.Text);
+                        updateCmd.Parameters.AddWithValue("@Valor", valor);
+                        updateCmd.Parameters.AddWithValue("@Pago", pago);
+                        updateCmd.Parameters.AddWithValue("@Saldo", saldo);
+                        updateCmd.Parameters.AddWithValue("@Id", id);
+
+                        updateCmd.ExecuteNonQuery();
+
+                        MessageBox.Show("✏️ Procedimiento actualizado correctamente.", "Actualización",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        dgvProcedimientos.Tag = null; // Limpiar selección
+                    }
+                    else
+                    {
+                        var checkCmd = new SQLiteCommand(@"
+    SELECT Id, Valor, Pago, Saldo 
+    FROM Procedimiento 
+    WHERE PacienteId = @PacienteId AND Actividad = @Actividad", conn);
+                        checkCmd.Parameters.AddWithValue("@PacienteId", _pacienteId);
+                        checkCmd.Parameters.AddWithValue("@Actividad", txtActividad.Text);
+
+                        using (var reader = checkCmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                // 🟢 Ya existe el procedimiento → actualizar pago acumulado
+                                int id = Convert.ToInt32(reader["Id"]);
+                                decimal valorExistente = Convert.ToDecimal(reader["Valor"]);
+                                decimal pagoAnterior = Convert.ToDecimal(reader["Pago"]);
+
+                                decimal nuevoPago = pagoAnterior + pago;
+
+                                if (nuevoPago > valorExistente)
+                                {
+                                    MessageBox.Show("⚠️ El pago total no puede exceder el valor del tratamiento.",
+                                        "Error de pago", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                    return;
+                                }
+
+                                decimal nuevoSaldo = valorExistente - nuevoPago;
+
+                                // ✅ Actualizar en base de datos
+                                var updateCmd = new SQLiteCommand(@"
+            UPDATE Procedimiento 
+            SET Pago = @Pago, Saldo = @Saldo, Fecha = @Fecha, Dia = @Dia
+            WHERE Id = @Id", conn);
+
+                                updateCmd.Parameters.AddWithValue("@Pago", nuevoPago);
+                                updateCmd.Parameters.AddWithValue("@Saldo", nuevoSaldo);
+                                updateCmd.Parameters.AddWithValue("@Fecha", dtpFecha.Value.ToString("yyyy-MM-dd"));
+                                updateCmd.Parameters.AddWithValue("@Dia", dtpFecha.Value.DayOfWeek.ToString());
+                                updateCmd.Parameters.AddWithValue("@Id", id);
+                                updateCmd.ExecuteNonQuery();
+
+                                // ✅ Actualizar visualmente el saldo real en el campo
+                                txtSaldo.Text = nuevoSaldo.ToString("0.00");
+
+                                MessageBox.Show($"💰 Pago acumulado actualizado.\n\nTotal pagado: {nuevoPago:C}\nSaldo restante: {nuevoSaldo:C}",
+                                    "Pago actualizado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            else
+                            {
+                                // 🔵 No existe → crear nuevo registro correctamente
+                                decimal saldoInicial = valor - pago;
+
+                                if (saldoInicial < 0)
+                                {
+                                    MessageBox.Show("❌ El pago no puede ser mayor al valor total.", "Error",
+                                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                    return;
+                                }
+
+                                var insertCmd = new SQLiteCommand(@"
+            INSERT INTO Procedimiento (PacienteId, Fecha, Dia, Actividad, Valor, Pago, Saldo)
+            VALUES (@PacienteId, @Fecha, @Dia, @Actividad, @Valor, @Pago, @Saldo)", conn);
+
+                                insertCmd.Parameters.AddWithValue("@PacienteId", _pacienteId);
+                                insertCmd.Parameters.AddWithValue("@Fecha", dtpFecha.Value.ToString("yyyy-MM-dd"));
+                                insertCmd.Parameters.AddWithValue("@Dia", dtpFecha.Value.DayOfWeek.ToString());
+                                insertCmd.Parameters.AddWithValue("@Actividad", txtActividad.Text);
+                                insertCmd.Parameters.AddWithValue("@Valor", valor);
+                                insertCmd.Parameters.AddWithValue("@Pago", pago);
+                                insertCmd.Parameters.AddWithValue("@Saldo", saldoInicial);
+                                insertCmd.ExecuteNonQuery();
+
+                                // ✅ Actualizar visualmente el saldo en el campo
+                                txtSaldo.Text = saldoInicial.ToString("0.00");
+
+                                MessageBox.Show($"✅ Procedimiento agregado correctamente.\nSaldo pendiente: {saldoInicial:C}",
+                                    "Nuevo registro", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+
+
+
+                    }
+                }
+
+                // ✅ Refrescar la tabla
+                CargarProcedimientos(_pacienteId);
+
+                // ✅ Mostrar saldo actualizado en el campo visual (desde BD)
+                using (var conn2 = DatabaseHelper.GetConnection())
+                {
+                    conn2.Open();
+                    var cmdSaldo = new SQLiteCommand(@"
+        SELECT Saldo FROM Procedimiento
+        WHERE PacienteId = @PacienteId AND Actividad = @Actividad
+        ORDER BY Id DESC LIMIT 1", conn2);
+                    cmdSaldo.Parameters.AddWithValue("@PacienteId", _pacienteId);
+                    cmdSaldo.Parameters.AddWithValue("@Actividad", txtActividad.Text);
+
+                    object result = cmdSaldo.ExecuteScalar();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        txtSaldo.Text = Convert.ToDecimal(result).ToString("0.00");
+                    }
+                    else
+                    {
+                        txtSaldo.Text = "0.00";
+                    }
+                }
+
+                // ✅ Limpiar campos excepto saldo (para visualizarlo)
+                txtActividad.Clear();
+                txtValor.Clear();
+                txtPago.Clear();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("❌ Error al agregar o actualizar el procedimiento: " + ex.Message,
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
+
 
         private void CargarOdontograma(int pacienteId)
         {
@@ -387,7 +867,8 @@ namespace RegistroPacientesApp.Forms
                 // === 2️⃣ Cargar todas las prótesis del paciente ===
                 protesisLista.Clear();
                 using (var cmdProt = new SQLiteCommand(
-                    "SELECT Tipo, Inicio, Fin FROM Protesis WHERE PacienteId = @id", conn))
+                    "SELECT Tipo, Inicio, Fin, Estado FROM Protesis WHERE PacienteId = @id"
+, conn))
                 {
                     cmdProt.Parameters.AddWithValue("@id", pacienteId);
                     using (var rd = cmdProt.ExecuteReader())
@@ -397,7 +878,9 @@ namespace RegistroPacientesApp.Forms
                             string tipo = rd["Tipo"].ToString();
                             int inicio = Convert.ToInt32(rd["Inicio"]);
                             int fin = Convert.ToInt32(rd["Fin"]);
-                            protesisLista.Add((tipo, inicio, fin));
+                            string estado = rd["Estado"]?.ToString() ?? "Realizada";
+                            protesisLista.Add((tipo, inicio, fin, estado));
+
                         }
                     }
                 }
@@ -444,8 +927,8 @@ namespace RegistroPacientesApp.Forms
             int espacioEntreArcos = 150;
 
             int anchoArcoAdulto = supIzq.Length * espacioEntreDientes;
-            int inicioIzquierda = centroX - anchoArcoAdulto - 120;
-            int inicioDerecha = centroX + 10;
+            int inicioIzquierda = centroX - anchoArcoAdulto - 50;
+            int inicioDerecha = centroX + 60;
 
             // === Superior Adultos ===
             CrearFilaArco(supIzq, inicioIzquierda, offsetY);
@@ -492,20 +975,21 @@ namespace RegistroPacientesApp.Forms
 
             foreach (var p in protesisLista)
             {
+                // 🔵 Azul = Realizada | 🔴 Rojo = Por Realizar
+                Color colorBase = (p.Estado == "Por Realizar")
+                    ? Color.Red
+                    : Color.DodgerBlue;
+
+                // Dibuja según el tipo de prótesis
                 if (p.Tipo == "Superior Total")
-                {
-                    DibujarLineaProtesis(g, Color.DodgerBlue, 65);
-                }
+                    DibujarLineaProtesis(g, colorBase, 65);
                 else if (p.Tipo == "Inferior Total")
-                {
-                    DibujarLineaProtesis(g, Color.IndianRed, 295);
-                }
+                    DibujarLineaProtesis(g, colorBase, 295);
                 else if (p.Tipo == "Removible Parcial" && p.Inicio > 0)
-                {
-                    DibujarRemovible(g, p.Inicio, p.Fin);
-                }
+                    DibujarRemovible(g, p.Inicio, p.Fin, colorBase);
             }
         }
+
 
         private void DibujarLineaProtesis(Graphics g, Color color, int yCentro)
         {
@@ -646,61 +1130,75 @@ namespace RegistroPacientesApp.Forms
 
         private void BtnProtesis_Click(object sender, EventArgs e)
         {
-            string mensaje = "Seleccione el tipo de prótesis a registrar:";
-            string titulo = "Registro de Prótesis";
+            using (var frm = new FrmSeleccionProtesis())
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    AplicarProtesis(frm.TipoSeleccionado, frm.Inicio, frm.Fin, frm.EstadoSeleccionado);
+                }
 
-            DialogResult seleccion = MessageBox.Show(
-                "Seleccione:\n\n" +
-                "Sí → Prótesis Total Superior\n" +
-                "No → Prótesis Total Inferior\n" +
-                "Cancelar → Prótesis Removible Parcial",
-                titulo,
-                MessageBoxButtons.YesNoCancel,
-                MessageBoxIcon.Information
-            );
-
-            if (seleccion == DialogResult.Yes)
-            {
-                AplicarProtesis("Superior Total");
-            }
-            else if (seleccion == DialogResult.No)
-            {
-                AplicarProtesis("Inferior Total");
-            }
-            else if (seleccion == DialogResult.Cancel)
-            {
-                AplicarProtesis("Removible Parcial");
             }
         }
 
-        private void AplicarProtesis(string tipo)
+
+        private void AplicarProtesis(string tipo, int inicio, int fin, string estado)
         {
-            int inicio = 0, fin = 0;
-
-            switch (tipo)
+            // 🟢 1️⃣ Verificar si es una prótesis removible
+            if (tipo == "Removible Parcial")
             {
-                case "Superior Total":
-                    inicio = 0; fin = 0; // total, sin rango específico
-                    break;
-                case "Inferior Total":
-                    inicio = 0; fin = 0;
-                    break;
-                case "Removible Parcial":
-                    SeleccionarRangoRemovible(out inicio, out fin);
-                    break;
-            }
+                // Permitir varias removibles con distinto rango
+                bool yaExisteMismoRango = protesisLista.Any(p =>
+                    p.Tipo == "Removible Parcial" &&
+                    p.Inicio == inicio &&
+                    p.Fin == fin);
 
-            // ✅ Evitar duplicados del mismo tipo
-            if (protesisLista.Any(p => p.Tipo == tipo))
-            {
-                MessageBox.Show($"⚠️ Ya existe una prótesis de tipo {tipo}.", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (yaExisteMismoRango)
+                {
+                    // Si ya existe ese mismo rango, solo actualizar estado
+                    int idx = protesisLista.FindIndex(p =>
+                        p.Tipo == "Removible Parcial" &&
+                        p.Inicio == inicio &&
+                        p.Fin == fin);
+
+                    protesisLista[idx] = (tipo, inicio, fin, estado);
+                    MessageBox.Show($"✅ Estado actualizado para removible ({inicio}-{fin}): {estado}",
+                        "Actualización", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    // Nueva removible
+                    protesisLista.Add((tipo, inicio, fin, estado));
+                    MessageBox.Show($"✅ Se registró prótesis removible ({inicio}-{fin}) - {estado}.",
+                        "Prótesis agregada", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                pnlOdontograma.Refresh();
                 return;
             }
 
-            protesisLista.Add((tipo, inicio, fin));
+            // 🔵 2️⃣ Para prótesis total (superior/inferior)
+            var existente = protesisLista.FirstOrDefault(p => p.Tipo == tipo);
+
+            if (!string.IsNullOrEmpty(existente.Tipo))
+            {
+                // Actualizar estado si ya existe
+                int index = protesisLista.FindIndex(p => p.Tipo == tipo);
+                protesisLista[index] = (tipo, inicio, fin, estado);
+
+                pnlOdontograma.Refresh();
+                MessageBox.Show($"✅ Estado actualizado: {tipo} ({estado}).",
+                    "Actualización", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Nueva prótesis total
+            protesisLista.Add((tipo, inicio, fin, estado));
             pnlOdontograma.Refresh();
-            MessageBox.Show($"✅ Se registró una {tipo}.", "Prótesis agregada", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            MessageBox.Show($"✅ Se registró una {tipo} ({estado}).",
+                "Prótesis agregada", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
 
 
 
@@ -722,8 +1220,7 @@ namespace RegistroPacientesApp.Forms
             }
         }
 
-
-        private void DibujarRemovible(Graphics g, int inicio, int fin)
+        private void DibujarRemovible(Graphics g, int inicio, int fin, Color color)
         {
             var piezas = pnlOdontograma.Controls.OfType<Panel>()
                 .Where(p => p.Tag is PiezaTag tag && tag.NumeroDiente >= inicio && tag.NumeroDiente <= fin)
@@ -736,15 +1233,12 @@ namespace RegistroPacientesApp.Forms
             var ultima = piezas.Last();
             int y = (primera.Top + ultima.Bottom) / 2;
 
-            using (Pen pen = new Pen(Color.Green, 5))
+            using (Pen pen = new Pen(color, 5))
             {
                 pen.DashStyle = DashStyle.DashDot;
                 g.DrawLine(pen, primera.Left, y, ultima.Right, y);
             }
         }
-
-
-
 
 
         private Button CrearBotonCaraPoligonal(string nombre, Rectangle inner, int margin, int w, int h)
@@ -848,11 +1342,6 @@ namespace RegistroPacientesApp.Forms
             btn.BringToFront();
             return btn;
         }
-
-
-
-
-
 
 
         #region === CONTEXTUALES ===
@@ -1144,19 +1633,28 @@ namespace RegistroPacientesApp.Forms
             {
                 conn.Open();
                 var cmd = new SQLiteCommand(@"
-            CREATE TABLE IF NOT EXISTS Protesis (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                PacienteId INTEGER NOT NULL,
-                Tipo TEXT,
-                Inicio INTEGER,
-                Fin INTEGER,
-                FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (PacienteId) REFERENCES Paciente(Id)
-            );", conn);
+        CREATE TABLE IF NOT EXISTS Protesis (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            PacienteId INTEGER NOT NULL,
+            Tipo TEXT,
+            Inicio INTEGER,
+            Fin INTEGER,
+            Estado TEXT,
+            FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (PacienteId) REFERENCES Paciente(Id)
+        );", conn);
                 cmd.ExecuteNonQuery();
-                conn.Close(); 
+                conn.Close();
             }
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+
+                conn.Close();
+            }
+
         }
+
 
 
 
@@ -1231,15 +1729,17 @@ namespace RegistroPacientesApp.Forms
                         foreach (var p in protesisLista)
                         {
                             var insertProt = new SQLiteCommand(@"
-        INSERT INTO Protesis (PacienteId, Tipo, Inicio, Fin)
-        VALUES (@id, @tipo, @inicio, @fin)", conn, transaction);
+        INSERT INTO Protesis (PacienteId, Tipo, Inicio, Fin, Estado)
+        VALUES (@id, @tipo, @inicio, @fin, @estado)", conn, transaction);
                             insertProt.Parameters.AddWithValue("@id", pacienteId);
                             insertProt.Parameters.AddWithValue("@tipo", p.Tipo);
                             insertProt.Parameters.AddWithValue("@inicio", p.Inicio);
                             insertProt.Parameters.AddWithValue("@fin", p.Fin);
+                            insertProt.Parameters.AddWithValue("@estado", p.Estado);
                             insertProt.ExecuteNonQuery();
                             seGuardoAlgo = true;
                         }
+
 
 
                         // ✅ Confirmar o revertir
@@ -1266,7 +1766,7 @@ namespace RegistroPacientesApp.Forms
         }
 
 
-       
+
 
 
         #endregion
